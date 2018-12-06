@@ -17,6 +17,7 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import f1_score
+from xgboost import XGBClassifier
 
 # Borro columnas según diccionario
 def get_x_data(new_vector_features, cols):
@@ -110,3 +111,28 @@ def runRandomForests(X_train, y_train, X_test, y_test, n_estimators = 100, crite
     acc_random_forest = round(random_forest.score(X_test, Y_prediction) * 100, 2)
     print(round(acc_random_forest,2,), "%")
     return random_forest
+
+def runXGBoost(X_train, y_train, X_test, y_test, max_depth = 5, learning_rate = 0.1, n_estimators = 100,
+              n_jobs = 2, min_child_weight=1):  #, criterion = 'gini', min_samples_split=4):
+    # Creo el objeto
+    xgb = XGBClassifier(n_estimators = n_estimators,
+                        max_depth = max_depth, learning_rate = learning_rate,
+                        random_state = 123, n_jobs = n_jobs,objective= 'binary:logistic',
+                        gamma=0, subsample=0.8, colsample_bytree=0.8, min_child_weight=min_child_weight,
+                        scale_pos_weight=1)
+    # Ajusto
+    xgb.fit(X_train, y_train)
+
+    # Predigo
+    Y_prediction = xgb.predict(X_test)
+
+    # Calculate the absolute errors
+    errors = abs(Y_prediction - y_test)
+
+    # Print out the mean absolute error (mae)
+    print('Mean Absolute Error:', round(np.mean(errors), 2), 'degrees.')
+    
+    #random_forest.score(X_test, Y_prediction)
+    acc_xgb = round(xgb.score(X_test, Y_prediction) * 100, 2)
+    print(round(acc_xgb,2,), "%")
+    return xgb
